@@ -1,0 +1,41 @@
+name: Bildirim motoru
+
+on:
+  schedule:
+    # Her 15 dakikada bir. Saat başı (:00) GitHub'ın en yoğun anı olduğu
+    # için gecikmeleri azaltmak üzere 7, 22, 37 ve 52. dakikalar seçildi.
+    - cron: "7,22,37,52 * * * *"
+  workflow_dispatch: {}   # Actions sekmesinden elle çalıştırmak için
+
+concurrency:
+  group: bildirim
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  calistir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: notifier/requirements.txt
+
+      - name: Bağımlılıkları kur
+        run: pip install -r notifier/requirements.txt
+
+      - name: Bildirimleri kontrol et ve gönder
+        working-directory: notifier
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+        run: python run.py

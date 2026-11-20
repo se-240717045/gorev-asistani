@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Görev Asistanı</title>
+  <meta name="theme-color" content="#f6f5f2" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#16161a" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Görevler">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Yükleniyor -->
+  <div id="yukleniyor" class="ekran-orta">
+    <div class="spinner" aria-label="Yükleniyor"></div>
+  </div>
+
+  <!-- Kurulum eksik -->
+  <section id="kurulum-eksik" class="ekran-orta" hidden>
+    <div class="kart dar">
+      <h1>Kurulum tamamlanmamış</h1>
+      <p><code>docs/config.js</code> dosyasındaki Supabase adresini ve anahtarlarını doldurman gerekiyor. Adımlar <strong>KURULUM.md</strong> dosyasında.</p>
+    </div>
+  </section>
+
+  <!-- Giriş -->
+  <section id="giris" class="ekran-orta" hidden>
+    <form id="giris-formu" class="kart dar">
+      <div class="logo">✓</div>
+      <h1>Görev Asistanı</h1>
+      <label>E-posta
+        <input type="email" name="email" autocomplete="username" required>
+      </label>
+      <label>Şifre
+        <input type="password" name="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit" class="btn birincil genis">Giriş yap</button>
+      <p id="giris-hata" class="hata" role="alert"></p>
+    </form>
+  </section>
+
+  <!-- Uygulama -->
+  <div id="uygulama" hidden>
+    <header class="ust">
+      <div>
+        <h1 id="baslik">Bugün</h1>
+        <p id="alt-baslik" class="soluk"></p>
+      </div>
+      <button id="yenile" class="ikon-btn" aria-label="Yenile" title="Yenile">↻</button>
+    </header>
+
+    <main>
+      <!-- BUGÜN -->
+      <section id="sekme-bugun" class="sekme">
+        <div id="bugun-ozet"></div>
+        <div id="bugun-liste"></div>
+        <details id="bugun-biten" class="biten" hidden>
+          <summary></summary>
+          <div class="liste"></div>
+        </details>
+      </section>
+
+      <!-- HAFTA -->
+      <section id="sekme-hafta" class="sekme" hidden>
+        <div class="hafta-gezinti">
+          <button id="hafta-onceki" class="ikon-btn" aria-label="Önceki hafta">‹</button>
+          <span id="hafta-aralik"></span>
+          <button id="hafta-sonraki" class="ikon-btn" aria-label="Sonraki hafta">›</button>
+        </div>
+        <div id="hafta-ozet"></div>
+        <div id="hafta-gunler"></div>
+      </section>
+
+      <!-- EKLE / DÜZENLE -->
+      <section id="sekme-ekle" class="sekme" hidden>
+        <div class="kart">
+          <label for="dogal-metin" class="kart-baslik">Doğal dille yaz</label>
+          <textarea id="dogal-metin" rows="3" maxlength="1000"
+            placeholder="Örn: Cuma'ya kadar teklif dosyasını bitir, önemli, 2 saat sürer"></textarea>
+          <button id="ayristir" class="btn ikincil genis" type="button">✨ Yapay zekayla doldur</button>
+          <p id="ayristir-durum" class="bilgi" role="status"></p>
+        </div>
+
+        <form id="gorev-formu" class="kart">
+          <h2 id="form-baslik" class="kart-baslik">Görev bilgileri</h2>
+          <input type="hidden" name="gorev_id">
+          <label>Başlık
+            <input name="baslik" required maxlength="200" placeholder="Ne yapılacak?">
+          </label>
+          <div class="ikili">
+            <label>Son tarih
+              <input type="date" name="due_date">
+            </label>
+            <label>Saat
+              <input type="time" name="due_time">
+            </label>
+          </div>
+          <fieldset class="secim">
+            <legend>Önem</legend>
+            <label><input type="radio" name="importance" value="1"> Düşük</label>
+            <label><input type="radio" name="importance" value="2" checked> Normal</label>
+            <label><input type="radio" name="importance" value="3"> Yüksek</label>
+          </fieldset>
+          <div class="ikili">
+            <label>Tahmini süre (dk)
+              <input type="number" name="estimate_minutes" min="1" max="1440" inputmode="numeric">
+            </label>
+            <label>Kategori
+              <select name="category">
+                <option value="kişisel">Kişisel</option>
+                <option value="iş">İş</option>
+              </select>
+            </label>
+          </div>
+          <label>Not
+            <textarea name="notes" rows="2" maxlength="2000"></textarea>
+          </label>
+          <div class="form-butonlar">
+            <button type="submit" class="btn birincil">Kaydet</button>
+            <button type="button" id="form-temizle" class="btn">Temizle</button>
+            <button type="button" id="form-sil" class="btn tehlike" hidden>Sil</button>
+          </div>
+          <p id="form-durum" class="bilgi" role="status"></p>
+        </form>
+      </section>
+
+      <!-- AYARLAR -->
+      <section id="sekme-ayarlar" class="sekme" hidden>
+        <div class="kart">
+          <h2 class="kart-baslik">Bildirimler</h2>
+          <p id="bildirim-durum" class="bilgi"></p>
+          <button id="bildirim-ac" class="btn birincil genis" type="button">Bu cihazda bildirimleri aç</button>
+          <button id="bildirim-test" class="btn genis" type="button">Bu cihazda test bildirimi göster</button>
+        </div>
+
+        <form id="ayar-formu" class="kart">
+          <h2 class="kart-baslik">Bildirim kuralları</h2>
+          <div class="ikili">
+            <label>Sessiz saat başlangıcı
+              <input type="time" name="quiet_start" required>
+            </label>
+            <label>Sessiz saat bitişi
+              <input type="time" name="quiet_end" required>
+            </label>
+          </div>
+          <label>Sabah brifingi saati
+            <input type="time" name="brief_time" required>
+          </label>
+          <label>🟠 Yüksek öncelik hatırlatma saatleri
+            <input name="high_slots" placeholder="09:00,15:00" pattern="^\s*\d{1,2}:\d{2}(\s*,\s*\d{1,2}:\d{2})*\s*$">
+          </label>
+          <div class="ikili">
+            <label>🔴 Kritik tekrar aralığı (dk)
+              <input type="number" name="critical_interval_minutes" min="30" max="1440" required>
+            </label>
+            <label>Günlük bildirim sınırı
+              <input type="number" name="daily_cap" min="1" max="100" required>
+            </label>
+          </div>
+          <button type="submit" class="btn birincil genis">Kaydet</button>
+          <p id="ayar-durum" class="bilgi" role="status"></p>
+        </form>
+
+        <div class="kart">
+          <h2 class="kart-baslik">Hesap</h2>
+          <p id="hesap-eposta" class="bilgi"></p>
+          <button id="cikis" class="btn genis" type="button">Çıkış yap</button>
+        </div>
+      </section>
+    </main>
+
+    <nav class="alt-menu" aria-label="Sekmeler">
+      <button data-sekme="bugun" class="aktif"><span>☀️</span>Bugün</button>
+      <button data-sekme="hafta"><span>🗓️</span>Hafta</button>
+      <button data-sekme="ekle"><span>＋</span>Ekle</button>
+      <button data-sekme="ayarlar"><span>⚙️</span>Ayarlar</button>
+    </nav>
+  </div>
+
+  <div id="bildirim-cubugu" class="toast" role="status" hidden></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
